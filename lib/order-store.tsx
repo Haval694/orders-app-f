@@ -7,7 +7,7 @@ export type OrderStatus = (typeof ORDER_STATUSES)[number];
 export type Month = { id: string; name: string; monthKey?: string; createdAt: string; updatedAt: string };
 export type Order = { id: string; monthId: string; customerName: string; city: string; phone: string; secondPhone: string; productPrice: number; deliveryFee: number; finalAmount: number; note: string; status: OrderStatus; createdAt: string; updatedAt: string; deletedAt?: string };
 export type OrderDraft = Omit<Order, "id" | "monthId" | "createdAt" | "updatedAt" | "deletedAt">;
-export type BackupPayload = { version: 2; exportedAt: string; months: Month[]; orders: Order[]; selectedMonthId: string | null };
+export type BackupPayload = { version: 3; exportedAt: string; months: Month[]; orders: Order[]; trash?: Order[]; selectedMonthId: string | null };
 
 type StoreState = { months: Month[]; orders: Order[]; trash: Order[]; selectedMonthId: string | null; hydrated: boolean };
 type Action =
@@ -104,8 +104,8 @@ export function OrderStoreProvider({ children }: { children: React.ReactNode }) 
   const trashOrder = useCallback((id: string) => dispatch({ type: "trash-order", payload: id }), []);
   const restoreOrder = useCallback((id: string) => dispatch({ type: "restore-order", payload: id }), []);
   const emptyTrash = useCallback(() => dispatch({ type: "empty-trash" }), []);
-  const exportBackup = useCallback((): BackupPayload => ({ version: 2, exportedAt: new Date().toISOString(), months: state.months, orders: [...state.orders, ...state.trash], selectedMonthId: state.selectedMonthId }), [state]);
-  const importBackup = useCallback((payload: BackupPayload) => { const cleaned = cleanData({ months: payload.months, orders: payload.orders, selectedMonthId: payload.selectedMonthId }); dispatch({ type: "hydrate", payload: { ...cleaned, trash: [] } }); }, []);
+  const exportBackup = useCallback((): BackupPayload => ({ version: 3, exportedAt: new Date().toISOString(), months: state.months, orders: state.orders, trash: state.trash, selectedMonthId: state.selectedMonthId }), [state]);
+  const importBackup = useCallback((payload: BackupPayload) => { const cleaned = cleanData({ months: payload.months, orders: payload.orders, trash: payload.trash ?? [], selectedMonthId: payload.selectedMonthId }); dispatch({ type: "hydrate", payload: cleaned }); }, []);
   const value = useMemo(() => ({ state, ...state, createMonth, updateMonth, deleteMonth, selectMonth, ensureCurrentMonth, createOrder, updateOrder, deleteOrder: trashOrder, trashOrder, restoreOrder, emptyTrash, exportBackup, importBackup }), [state, createMonth, updateMonth, deleteMonth, selectMonth, ensureCurrentMonth, createOrder, updateOrder, trashOrder, restoreOrder, emptyTrash, exportBackup, importBackup]);
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

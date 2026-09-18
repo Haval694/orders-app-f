@@ -1,7 +1,7 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import { useMemo } from "react";
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
@@ -54,11 +54,11 @@ export default function HomeScreen() {
         </View>
 
         <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <StatusRow icon="inventory-2" label="ماوە" value={counts.remaining} total={totals.remaining} color={colors.warning} colors={colors} />
+          <StatusRow icon="inventory-2" label="ماوە" value={counts.remaining} total={totals.remaining} color={colors.warning} colors={colors} onPress={() => router.push({ pathname: "/orders", params: { status: "ماوەیە" } })} />
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <StatusRow icon="local-shipping" label="لە لای شۆفێرە" value={counts.driver} total={totals.driver} color={colors.primary} colors={colors} />
+          <StatusRow icon="local-shipping" label="لە لای شۆفێرە" value={counts.driver} total={totals.driver} color={colors.primary} colors={colors} onPress={() => router.push({ pathname: "/orders", params: { status: "لە لای شۆفێرە" } })} />
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <StatusRow icon="task-alt" label="گەیشتووە" value={counts.delivered} total={totals.delivered} color={colors.success} colors={colors} />
+          <StatusRow icon="task-alt" label="گەیشتووە" value={counts.delivered} total={totals.delivered} color={colors.success} colors={colors} onPress={() => router.push({ pathname: "/orders", params: { status: "گەیشتووە" } })} />
         </View>
 
         {!selectedMonth && (
@@ -74,16 +74,16 @@ export default function HomeScreen() {
   );
 }
 
-function StatusRow({ icon, label, value, total, color, colors }: { icon: keyof typeof MaterialIcons.glyphMap; label: string; value: number; total: number; color: string; colors: ReturnType<typeof useColors> }) {
+function StatusRow({ icon, label, value, total, color, colors, onPress }: { icon: keyof typeof MaterialIcons.glyphMap; label: string; value: number; total: number; color: string; colors: ReturnType<typeof useColors>; onPress: () => void }) {
   return (
-    <View style={styles.statusRow}>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`بینینی ${label}`} style={({ pressed }) => [styles.statusRow, pressed && { opacity: 0.65 }]}>
       <View style={[styles.statusIcon, { backgroundColor: color + "20" }]}><MaterialIcons name={icon} size={19} color={color} /></View>
       <View style={styles.statusInfo}>
         <Text style={[styles.statusLabel, { color: colors.foreground }]}>{label}</Text>
         <Text style={[styles.statusTotal, { color: colors.muted }]}>کۆی پارە: {formatAmount(total)}</Text>
       </View>
       <Text style={[styles.statusValue, { color }]}>{value}</Text>
-    </View>
+    </Pressable>
   );
 }
 

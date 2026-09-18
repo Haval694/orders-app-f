@@ -1,5 +1,5 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Alert, FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
@@ -8,7 +8,7 @@ import { useColors } from "@/hooks/use-colors";
 import { formatOrderDate, ORDER_STATUSES, Order, OrderStatus, useOrderStore } from "@/lib/order-store";
 import { calculateFinalAmount } from "@/lib/order-utils";
 
-const EMPTY_DRAFT = { customerName: "", city: "", phone: "", secondPhone: "", productPrice: 0, deliveryFee: 0, finalAmount: 0, note: "", status: "ماوەیە" as OrderStatus };
+const EMPTY_DRAFT = { customerName: "", city: "", phone: "", secondPhone: "", productPrice: 0, deliveryFee: 0, finalAmount: 0, note: "", status: "لە لای شۆفێرە" as OrderStatus };
 
 function normalizeDigits(value: string) {
   return value.replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit))).replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)));
@@ -24,9 +24,11 @@ function formatAmount(value: number) {
 export default function OrdersScreen() {
   const colors = useColors();
   const router = useRouter();
+  const params = useLocalSearchParams<{ status?: string }>();
   const { hydrated, months, orders, selectedMonthId, createOrder, updateOrder, deleteOrder } = useOrderStore();
   const selectedMonth = months.find((month) => month.id === selectedMonthId);
-  const monthOrders = useMemo(() => orders.filter((order) => order.monthId === selectedMonthId), [orders, selectedMonthId]);
+  const statusFilter = ORDER_STATUSES.includes(params.status as OrderStatus) ? params.status as OrderStatus : null;
+  const monthOrders = useMemo(() => orders.filter((order) => order.monthId === selectedMonthId && (!statusFilter || order.status === statusFilter)), [orders, selectedMonthId, statusFilter]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editing, setEditing] = useState<Order | null>(null);
   const [draft, setDraft] = useState(EMPTY_DRAFT);
@@ -71,7 +73,7 @@ export default function OrdersScreen() {
     <ScreenContainer edges={["top", "left", "right"]}>
       <View style={styles.page}>
         <View style={styles.pageHeader}>
-          <View><Text style={[styles.pageTitle, { color: colors.foreground }]}>داواکاریەکان</Text><Text style={[styles.subtitle, { color: colors.muted }]}>{selectedMonth.name} · {monthOrders.length} ئۆردەر</Text></View>
+          <View><Text style={[styles.pageTitle, { color: colors.foreground }]}>{statusFilter ?? "داواکاریەکان"}</Text><Text style={[styles.subtitle, { color: colors.muted }]}>{selectedMonth.name} · {monthOrders.length} ئۆردەر {statusFilter ? "· فلتەرکراو" : ""}</Text></View>
           <View style={[styles.monthMark, { backgroundColor: colors.primary + "18" }]}><MaterialIcons name="receipt-long" size={22} color={colors.primary} /></View>
         </View>
         <FlatList

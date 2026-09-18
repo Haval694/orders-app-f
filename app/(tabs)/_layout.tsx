@@ -37,6 +37,9 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="orders"
+        listeners={({ navigation }) => ({
+          tabPress: () => navigation.setParams({ status: undefined }),
+        })}
         options={{
           title: "داواکاریەکان",
           tabBarIcon: ({ color }) => <IconSymbol size={24} name="list.bullet.clipboard" color={color} />,
